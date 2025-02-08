@@ -3,7 +3,6 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'animated_blob.dart';
-import 'grain_shader.dart';
 
 class GPACard extends StatelessWidget {
   final double gpa;
@@ -11,24 +10,27 @@ class GPACard extends StatelessWidget {
   const GPACard({super.key, required this.gpa});
 
   List<Color> _getGPAColors(double gpa) {
-    if (gpa >= 3.5)
+    if (gpa >= 3.5) {
       return [
         Colors.green.shade300,
         Colors.green.shade500,
         Colors.teal.shade300,
       ];
-    if (gpa >= 3.0)
+    }
+    if (gpa >= 3.0) {
       return [
         Colors.blue.shade300,
         Colors.blue.shade500,
         Colors.indigo.shade300,
       ];
-    if (gpa >= 2.0)
+    }
+    if (gpa >= 2.0) {
       return [
         Colors.orange.shade300,
         Colors.orange.shade500,
         Colors.deepOrange.shade300,
       ];
+    }
     return [
       Colors.red.shade300,
       Colors.red.shade500,

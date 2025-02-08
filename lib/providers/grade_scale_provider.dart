@@ -7,7 +7,6 @@ class GradeScaleProvider extends ChangeNotifier {
   List<GradeScale> _scales = [];
   late SharedPreferences _prefs;
   static const _key = 'grade_scales';
-  static const _lockKey = 'grade_scales_locked';
   bool _isLocked = true; // Default to locked
 
   List<GradeScale> get scales => List.unmodifiable(_scales);

@@ -7,14 +7,16 @@ class GradeScaleProvider extends ChangeNotifier {
   List<GradeScale> _scales = [];
   late SharedPreferences _prefs;
   static const _key = 'grade_scales';
+  static const _lockKey = 'grade_scales_locked';
+  bool _isLocked = true; // Default to locked
 
   List<GradeScale> get scales => List.unmodifiable(_scales);
+  bool get isLocked => _isLocked;
 
   Future<void> init() async {
     _prefs = await SharedPreferences.getInstance();
     _loadScales();
     if (_scales.isEmpty) {
-      // Default scales
       _scales = [
         GradeScale(grade: 'A', points: 4.0),
         GradeScale(grade: 'A-', points: 3.7),
@@ -44,19 +46,32 @@ class GradeScaleProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  void setLocked(bool locked) {
+    _isLocked = locked;
+    notifyListeners();
+  }
+
+  Future<void> toggleLock() async {
+    _isLocked = !_isLocked;
+    notifyListeners();
+  }
+
   Future<void> addScale(String grade, double points) async {
+    if (_isLocked) return;
     _scales.add(GradeScale(grade: grade, points: points));
     _scales.sort((a, b) => b.points.compareTo(a.points));
     await _saveScales();
   }
 
   Future<void> removeScale(GradeScale scale) async {
+    if (_isLocked) return;
     _scales.removeWhere((s) => s.grade == scale.grade);
     await _saveScales();
   }
 
   Future<void> updateScale(
       GradeScale oldScale, String newGrade, double newPoints) async {
+    if (_isLocked) return;
     final index = _scales.indexWhere((s) => s.grade == oldScale.grade);
     if (index != -1) {
       _scales[index] = GradeScale(grade: newGrade, points: newPoints);

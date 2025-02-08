@@ -9,62 +9,175 @@ class GradeScaleScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Grade Scale Settings'),
-      ),
-      body: Consumer<GradeScaleProvider>(
+    return WillPopScope(
+      onWillPop: () async {
+        final provider = context.read<GradeScaleProvider>();
+        if (!provider.isLocked) {
+          provider.setLocked(true);
+        }
+        return true;
+      },
+      child: Consumer<GradeScaleProvider>(
         builder: (context, provider, child) {
-          return CustomScrollView(
-            slivers: [
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Grade Scale Configuration',
-                            style: Theme.of(context).textTheme.titleLarge,
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            'Configure your institution\'s grading scale here. These settings will be used to calculate your GPA.',
-                            style: Theme.of(context).textTheme.bodyMedium,
-                          ),
-                        ],
+          return Scaffold(
+            appBar: AppBar(
+              title: const Text('Grade Scale Settings'),
+              leading: IconButton(
+                icon: const Icon(Icons.arrow_back),
+                onPressed: () {
+                  if (!provider.isLocked) {
+                    provider.setLocked(true);
+                  }
+                  Navigator.of(context).pop();
+                },
+              ),
+              actions: [
+                IconButton(
+                  icon: Icon(
+                    provider.isLocked
+                        ? Icons.lock_outlined
+                        : Icons.lock_open_outlined,
+                    color: provider.isLocked ? Colors.orange : null,
+                  ),
+                  onPressed: () => _handleLockToggle(context, provider),
+                ),
+              ],
+            ),
+            body: provider.isLocked
+                ? Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(
+                          Icons.lock_outlined,
+                          size: 48,
+                          color: Colors.orange,
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'Grade Scale is Locked',
+                          style: Theme.of(context).textTheme.titleLarge,
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Unlock to make changes',
+                          style: Theme.of(context).textTheme.bodyMedium,
+                        ),
+                        const SizedBox(height: 16),
+                        FilledButton.tonalIcon(
+                          onPressed: () => _handleLockToggle(context, provider),
+                          icon: const Icon(Icons.lock_open),
+                          label: const Text('Unlock'),
+                        ),
+                      ],
+                    ).animate().fadeIn(),
+                  )
+                : CustomScrollView(
+                    slivers: [
+                      SliverToBoxAdapter(
+                        child: Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Card(
+                            child: Padding(
+                              padding: const EdgeInsets.all(16),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Grade Scale Configuration',
+                                    style:
+                                        Theme.of(context).textTheme.titleLarge,
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    'Configure your institution\'s grading scale here. These settings will be used to calculate your GPA.',
+                                    style:
+                                        Theme.of(context).textTheme.bodyMedium,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ).animate().fadeIn().slideX(),
+                        ),
                       ),
-                    ),
-                  ).animate().fadeIn().slideX(),
-                ),
-              ),
-              SliverList(
-                delegate: SliverChildBuilderDelegate(
-                  (context, index) {
-                    final scale = provider.scales[index];
-                    return _GradeScaleItem(
-                      scale: scale,
-                      onEdit: () => _showEditDialog(context, provider, scale),
-                      onDelete: () =>
-                          _showDeleteDialog(context, provider, scale),
-                    ).animate().fadeIn(delay: (50 * index).ms).slideX();
-                  },
-                  childCount: provider.scales.length,
-                ),
-              ),
-            ],
+                      SliverList(
+                        delegate: SliverChildBuilderDelegate(
+                          (context, index) {
+                            final scale = provider.scales[index];
+                            return _GradeScaleItem(
+                              scale: scale,
+                              onEdit: () =>
+                                  _showEditDialog(context, provider, scale),
+                              onDelete: () =>
+                                  _showDeleteDialog(context, provider, scale),
+                            ).animate().fadeIn(delay: (50 * index).ms).slideX();
+                          },
+                          childCount: provider.scales.length,
+                        ),
+                      ),
+                    ],
+                  ),
+            floatingActionButton: provider.isLocked
+                ? null
+                : FloatingActionButton.extended(
+                    onPressed: () => _showAddDialog(context),
+                    label: const Text('Add Grade'),
+                    icon: const Icon(Icons.add),
+                  ),
           );
         },
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _showAddDialog(context),
-        label: const Text('Add Grade'),
-        icon: const Icon(Icons.add),
-      ),
     );
+  }
+
+  void _handleLockToggle(BuildContext context, GradeScaleProvider provider) {
+    if (provider.isLocked) {
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Unlock Grade Scale'),
+          content: const Text(
+            'Are you sure you want to unlock the grade scale? This will allow modifications to the grading system.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () {
+                provider.toggleLock();
+                Navigator.pop(context);
+              },
+              child: const Text('Unlock'),
+            ),
+          ],
+        ),
+      );
+    } else {
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Lock Grade Scale'),
+          content: const Text(
+            'Are you sure you want to lock the grade scale? This will prevent any modifications to the grading system.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () {
+                provider.toggleLock();
+                Navigator.pop(context);
+              },
+              child: const Text('Lock'),
+            ),
+          ],
+        ),
+      );
+    }
   }
 
   void _showAddDialog(BuildContext context) {

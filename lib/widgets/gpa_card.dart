@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'animated_blob.dart';
@@ -8,11 +10,30 @@ class GPACard extends StatelessWidget {
 
   const GPACard({super.key, required this.gpa});
 
-  Color _getGPAColor(double gpa) {
-    if (gpa >= 3.5) return Colors.green;
-    if (gpa >= 3.0) return Colors.blue;
-    if (gpa >= 2.0) return Colors.orange;
-    return Colors.red;
+  List<Color> _getGPAColors(double gpa) {
+    if (gpa >= 3.5)
+      return [
+        Colors.green.shade300,
+        Colors.green.shade500,
+        Colors.teal.shade300,
+      ];
+    if (gpa >= 3.0)
+      return [
+        Colors.blue.shade300,
+        Colors.blue.shade500,
+        Colors.indigo.shade300,
+      ];
+    if (gpa >= 2.0)
+      return [
+        Colors.orange.shade300,
+        Colors.orange.shade500,
+        Colors.deepOrange.shade300,
+      ];
+    return [
+      Colors.red.shade300,
+      Colors.red.shade500,
+      Colors.deepOrange.shade300,
+    ];
   }
 
   String _getGPAStatus(double gpa) {
@@ -24,7 +45,7 @@ class GPACard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = _getGPAColor(gpa);
+    final colors = _getGPAColors(gpa);
     final status = _getGPAStatus(gpa);
     final colorScheme = Theme.of(context).colorScheme;
 
@@ -32,24 +53,53 @@ class GPACard extends StatelessWidget {
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(32),
+        side: BorderSide(
+          color: colors[1].withOpacity(0.1),
+          width: 1,
+        ),
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(32),
         child: Stack(
           children: [
-            // Animated blobs
+            // Background gradient
             Positioned.fill(
-              child: AnimatedBlob(
-                color: color.withOpacity(0.1),
-                size: 300,
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      colors[0].withOpacity(0.1),
+                      colors[1].withOpacity(0.05),
+                    ],
+                  ),
+                ),
               ),
             ),
-            // Grain effect
+            // Animated blobs with larger size
             Positioned.fill(
-              child: CustomPaint(
-                painter: GrainShader(
-                  color: colorScheme.primary,
-                  opacity: 0.05,
+              child: AnimatedBlob(
+                colors: colors,
+                size: 800,
+              ),
+            ),
+            // Enhanced glass effect
+            Positioned.fill(
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 30, sigmaY: 30),
+                child: Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        colorScheme.surface.withOpacity(0.8),
+                        colorScheme.surface.withOpacity(0.2),
+                      ],
+                      stops: const [0.0, 1.0],
+                    ),
+                  ),
                 ),
               ),
             ),
@@ -74,7 +124,7 @@ class GPACard extends StatelessWidget {
                         gpa.toStringAsFixed(2),
                         style:
                             Theme.of(context).textTheme.displayLarge?.copyWith(
-                                  color: color,
+                                  color: colors[1],
                                   fontWeight: FontWeight.bold,
                                 ),
                       ).animate().fadeIn().scale(),
@@ -94,7 +144,7 @@ class GPACard extends StatelessWidget {
                       vertical: 6,
                     ),
                     decoration: BoxDecoration(
-                      color: color.withOpacity(0.1),
+                      color: colors[1].withOpacity(0.1),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Row(
@@ -103,14 +153,14 @@ class GPACard extends StatelessWidget {
                         Icon(
                           Icons.school_outlined,
                           size: 16,
-                          color: color,
+                          color: colors[1],
                         ),
                         const SizedBox(width: 4),
                         Text(
                           status,
                           style:
                               Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                    color: color,
+                                    color: colors[1],
                                     fontWeight: FontWeight.bold,
                                   ),
                         ),

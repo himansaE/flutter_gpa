@@ -231,71 +231,162 @@ class _CourseCard extends StatelessWidget {
     required this.onDelete,
   });
 
+  void _showEditDialog(BuildContext context) {
+    final formKey = GlobalKey<FormState>();
+    String name = course.name;
+    double credits = course.credits;
+    String grade = course.grade;
+    final gradeScales = context.read<GradeScaleProvider>().scales;
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Edit Course'),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: Form(
+            key: formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextFormField(
+                  initialValue: name,
+                  decoration: const InputDecoration(
+                    labelText: 'Course Name',
+                    prefixIcon: Icon(Icons.book),
+                  ),
+                  textCapitalization: TextCapitalization.words,
+                  validator: (value) =>
+                      value?.isEmpty ?? true ? 'Please enter a name' : null,
+                  onSaved: (value) => name = value ?? '',
+                ),
+                const SizedBox(height: 16),
+                TextFormField(
+                  initialValue: credits.toString(),
+                  decoration: const InputDecoration(
+                    labelText: 'Credits',
+                    prefixIcon: Icon(Icons.credit_card),
+                  ),
+                  keyboardType: TextInputType.number,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) return 'Enter credits';
+                    final credits = double.tryParse(value);
+                    if (credits == null || credits <= 0) {
+                      return 'Enter valid credits';
+                    }
+                    return null;
+                  },
+                  onSaved: (value) => credits = double.parse(value ?? '0'),
+                ),
+                const SizedBox(height: 16),
+                DropdownButtonFormField<String>(
+                  decoration: const InputDecoration(
+                    labelText: 'Grade',
+                    prefixIcon: Icon(Icons.grade),
+                  ),
+                  value: grade,
+                  items: gradeScales
+                      .map((g) => DropdownMenuItem(
+                            value: g.grade,
+                            child: Text('${g.grade} (${g.points})'),
+                          ))
+                      .toList(),
+                  onChanged: (value) => grade = value ?? gradeScales.first.grade,
+                ),
+              ],
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () {
+              if (formKey.currentState?.validate() ?? false) {
+                formKey.currentState?.save();
+                final newCourse = Course(
+                  name: name,
+                  credits: credits,
+                  grade: grade,
+                );
+                context.read<GPAProvider>().updateCourse(course, newCourse);
+                Navigator.pop(context);
+              }
+            },
+            child: const Text('Save'),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 8),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(16),
-        onTap: () {}, // For future edit functionality
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            children: [
-              CircleAvatar(
-                backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-                child: Text(
-                  course.grade,
-                  style: TextStyle(
-                    color: Theme.of(context).colorScheme.onPrimaryContainer,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          children: [
+            CircleAvatar(
+              backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+              child: Text(
+                course.grade,
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onPrimaryContainer,
+                ),
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    course.name,
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
                   ),
-                ),
+                  Text(
+                    '${course.credits} credits · Grade: ${course.grade}',
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
+                ],
               ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      course.name,
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
-                    ),
-                    Text(
-                      '${course.credits} credits · Grade: ${course.grade}',
-                      style: Theme.of(context).textTheme.bodyMedium,
-                    ),
-                  ],
-                ),
-              ),
-              IconButton(
-                icon: const Icon(Icons.delete_outline),
-                onPressed: () {
-                  showDialog(
-                    context: context,
-                    builder: (context) => AlertDialog(
-                      title: const Text('Delete Course'),
-                      content: Text('Delete ${course.name}?'),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.pop(context),
-                          child: const Text('Cancel'),
-                        ),
-                        FilledButton(
-                          onPressed: () {
-                            onDelete();
-                            Navigator.pop(context);
-                          },
-                          child: const Text('Delete'),
-                        ),
-                      ],
-                    ),
-                  );
-                },
-              ),
-            ],
-          ),
+            ),
+            IconButton(
+              icon: const Icon(Icons.edit_outlined),
+              onPressed: () => _showEditDialog(context),
+            ),
+            IconButton(
+              icon: const Icon(Icons.delete_outline),
+              onPressed: () {
+                showDialog(
+                  context: context,
+                  builder: (context) => AlertDialog(
+                    title: const Text('Delete Course'),
+                    content: Text('Delete ${course.name}?'),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context),
+                        child: const Text('Cancel'),
+                      ),
+                      FilledButton(
+                        onPressed: () {
+                          onDelete();
+                          Navigator.pop(context);
+                        },
+                        child: const Text('Delete'),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+          ],
         ),
       ),
     );

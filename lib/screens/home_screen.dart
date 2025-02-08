@@ -6,6 +6,7 @@ import '../providers/grade_scale_provider.dart';
 import '../models/course.dart';
 import 'grade_scale_screen.dart';
 import 'analysis_screen.dart';
+import '../widgets/gpa_card.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -54,7 +55,7 @@ class HomeScreen extends StatelessWidget {
                 ),
                 sliver: SliverList(
                   delegate: SliverChildListDelegate([
-                    _GPACard(gpa: gpaProvider.gpa),
+                    GPACard(gpa: gpaProvider.gpa),
                     const SizedBox(height: 24),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -218,53 +219,6 @@ class HomeScreen extends StatelessWidget {
         ],
       ),
     );
-  }
-}
-
-class _GPACard extends StatelessWidget {
-  final double gpa;
-
-  const _GPACard({required this.gpa});
-
-  @override
-  Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-
-    return Card(
-      child: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              colorScheme.primaryContainer,
-              colorScheme.secondaryContainer,
-            ],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(32),
-          child: Column(
-            children: [
-              Text(
-                'Current GPA',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      color: colorScheme.onPrimaryContainer,
-                    ),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                gpa.toStringAsFixed(2),
-                style: Theme.of(context).textTheme.displayLarge?.copyWith(
-                      color: colorScheme.onPrimaryContainer,
-                      fontWeight: FontWeight.bold,
-                    ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    ).animate().fadeIn().scale();
   }
 }
 

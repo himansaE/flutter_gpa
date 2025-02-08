@@ -5,6 +5,7 @@ import '../providers/gpa_provider.dart';
 import '../providers/grade_scale_provider.dart';
 import '../models/course.dart';
 import 'grade_scale_screen.dart';
+import 'analysis_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -21,6 +22,15 @@ class HomeScreen extends StatelessWidget {
           SliverAppBar.large(
             title: const Text('GPA Calculator'),
             actions: [
+              IconButton(
+                icon: const Icon(Icons.analytics_outlined),
+                onPressed: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const AnalysisScreen(),
+                  ),
+                ),
+              ),
               IconButton(
                 icon: const Icon(Icons.settings_outlined),
                 onPressed: () => Navigator.push(

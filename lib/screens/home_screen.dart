@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../providers/gpa_provider.dart';
+import '../providers/grade_scale_provider.dart';
 import '../models/course.dart';
+import 'grade_scale_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -19,6 +21,15 @@ class HomeScreen extends StatelessWidget {
           SliverAppBar.large(
             title: const Text('GPA Calculator'),
             actions: [
+              IconButton(
+                icon: const Icon(Icons.settings_outlined),
+                onPressed: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const GradeScaleScreen(),
+                  ),
+                ),
+              ),
               IconButton(
                 icon: const Icon(Icons.info_outline),
                 onPressed: () => _showInfoDialog(context),
@@ -77,20 +88,8 @@ class HomeScreen extends StatelessWidget {
     final formKey = GlobalKey<FormState>();
     String name = '';
     double credits = 0;
-    String grade = 'A';
-    final grades = [
-      'A',
-      'A-',
-      'B+',
-      'B',
-      'B-',
-      'C+',
-      'C',
-      'C-',
-      'D+',
-      'D',
-      'F'
-    ];
+    String grade = context.read<GradeScaleProvider>().scales.first.grade;
+    final gradeScales = context.read<GradeScaleProvider>().scales;
 
     showDialog(
       context: context,
@@ -137,10 +136,14 @@ class HomeScreen extends StatelessWidget {
                     prefixIcon: Icon(Icons.grade),
                   ),
                   value: grade,
-                  items: grades
-                      .map((g) => DropdownMenuItem(value: g, child: Text(g)))
+                  items: gradeScales
+                      .map((g) => DropdownMenuItem(
+                            value: g.grade,
+                            child: Text('${g.grade} (${g.points})'),
+                          ))
                       .toList(),
-                  onChanged: (value) => grade = value ?? 'A',
+                  onChanged: (value) =>
+                      grade = value ?? gradeScales.first.grade,
                 ),
               ],
             ),
@@ -172,18 +175,30 @@ class HomeScreen extends StatelessWidget {
   }
 
   void _showInfoDialog(BuildContext context) {
+    final scales = context.read<GradeScaleProvider>().scales;
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('GPA Scale'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text('A  = 4.0', style: Theme.of(context).textTheme.bodyLarge),
-            Text('A- = 3.7', style: Theme.of(context).textTheme.bodyLarge),
-            Text('B+ = 3.3', style: Theme.of(context).textTheme.bodyLarge),
-            // ...Add more grade scales
-          ],
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: scales
+                .map((scale) => Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 4),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(scale.grade,
+                              style: Theme.of(context).textTheme.titleMedium),
+                          Text('${scale.points}',
+                              style: Theme.of(context).textTheme.bodyLarge),
+                        ],
+                      ),
+                    ))
+                .toList(),
+          ),
         ),
         actions: [
           TextButton(
@@ -247,7 +262,10 @@ class _CourseCard extends StatelessWidget {
   final Course course;
   final VoidCallback onDelete;
 
-  const _CourseCard({required this.course, required this.onDelete});
+  const _CourseCard({
+    required this.course,
+    required this.onDelete,
+  });
 
   @override
   Widget build(BuildContext context) {

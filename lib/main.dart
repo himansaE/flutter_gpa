@@ -1,17 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'providers/gpa_provider.dart';
+import 'providers/grade_scale_provider.dart';
 import 'screens/home_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   final gpaProvider = GPAProvider();
-  await gpaProvider.init();
+  final gradeScaleProvider = GradeScaleProvider();
+
+  await Future.wait([
+    gpaProvider.init(),
+    gradeScaleProvider.init(),
+  ]);
 
   runApp(
-    ChangeNotifierProvider(
-      create: (_) => gpaProvider,
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => gpaProvider),
+        ChangeNotifierProvider(create: (_) => gradeScaleProvider),
+      ],
       child: const MainApp(),
     ),
   );

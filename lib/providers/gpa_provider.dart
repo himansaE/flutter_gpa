@@ -46,6 +46,15 @@ class GPAProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> updateCourse(Course oldCourse, Course newCourse) async {
+    final index = _courses.indexWhere((c) => c.id == oldCourse.id);
+    if (index != -1) {
+      _courses[index] = newCourse;
+      await _saveCourses();
+      notifyListeners();
+    }
+  }
+
   Future<void> _saveCourses() async {
     final coursesJson =
         _courses.map((course) => jsonEncode(course.toJson())).toList();
